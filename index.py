@@ -30,12 +30,16 @@ class VGGNet:
     '''
 
     def features(self, img_path):
-        img = image.load_img(img_path, target_size=(
-            self.input_shape[0], self.input_shape[1]))
+        img = image.load_img(img_path, target_size=(self.input_shape[0], self.input_shape[1]),
+                             interpolation='bilinear')
         img = image.img_to_array(img)
-        img = np.expand_dims(img, axis=0)
-        img = preprocess_input(img)
-        feat = self.model.predict(img)
+        return self.featureSrc(img)
+
+    # numpy array
+    def featureSrc(self, image_np):
+        image_np = np.expand_dims(image_np, axis=0)
+        image_np = preprocess_input(image_np)
+        feat = self.model.predict(image_np)
         norm_feat = feat[0]/LA.norm(feat[0])
         return norm_feat
 
@@ -48,18 +52,36 @@ class VGGNet:
             img_name = os.path.split(img_path)[1]
             feats.append(norm_feat)
             names.append(img_name.encode())
-            print("extracting feature from image No. %d / %d" %((i+1), len(img_list)))
+            print("extracting feature from image No. %d / %d" %
+                  ((i+1), len(img_list)))
 
         feats = np.array(feats)
         return names, feats
 
 
-'''
- Returns a list of filenames for all jpg images in a directory. 
-'''
+# VGG16
+model = VGGNet()
+
+
+# get feature from image data
+def Feature(image_src):
+    image_np = np.array(image_src).astype(np.float32)
+    # BGR -> RGB
+    b = np.copy(image_np[:, :, 0])
+    image_np[:, :, 0] = image_np[:, :, 2]
+    image_np[:, :, 2] = b
+    result = model.featureSrc(image_np)
+    return result
+
+
+# init VGG16
+model.features("image.JPG")
 
 
 def get_imlist(path):
+    '''
+    Returns a list of filenames for all jpg images in a directory. 
+    '''
     return [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.jpg')]
 
 
@@ -82,7 +104,6 @@ if __name__ == "__main__":
     # directory for storing extracted features
     output = args["index"]
 
-    model = VGGNet()
     names, feats = model.featureAll(db)
 
     h5f = h5py.File(output, 'w')
