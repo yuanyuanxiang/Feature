@@ -1,107 +1,21 @@
+/************************************************************************
+* C++ 调用python脚本返回numpy array的通用方法
+* 2019-10-24 
+* 袁沅祥
+************************************************************************/
+
 #include "python.h"
 #include <map>
 #include <string>
-#include "strTransfer.h"
 #include "config.h"
 
 #pragma once
-
-// 最多可检测目标个数
-#define MAX_BOXES_NUM 100
 
 // Py_DECREF 导致程序二次运行时崩溃
 #define My_DECREF(p) 
 
 // 包含 numpy 中的头文件arrayobject.h
 #include "..\Lib\site-packages\numpy\core\include\numpy\arrayobject.h"
-
-/************************************************************************
-* @class tfOutput
-* @brief tensorflow模型输出的参数结构
-* @note 由于该结构需要被频繁使用, 故该类通过引用计数ref管理内存, \n 
-    如有内存泄漏, 请联系本人
-************************************************************************/
-class tfOutput
-{
-protected:
-	int *ref;				// 引用计数
-	int addref() const { return ++ (*ref); }
-	int removeref() const { return -- (*ref); }
-	void destroy()			// 销毁
-	{
-		if (0 == removeref())
-		{
-			SAFE_DELETE_ARRAY(ref);
-			SAFE_DELETE_ARRAY(feature);
-		}
-	}
-public:
-	float *feature;			// 512维的特征向量
-
-	tfOutput()
-	{
-		memset(this, 0, sizeof(tfOutput));
-		ref = new int(1);
-		feature = new float[512];
-	}
-	~tfOutput()
-	{
-		destroy();
-	}
-	tfOutput(const tfOutput &o)
-	{
-		ref = o.ref;
-		feature = o.feature;
-		addref();
-	}
-	tfOutput operator = (const tfOutput &o)
-	{
-		if (this != &o)// 防止自己赋值给自己
-		{
-			// 先清理本对象
-			destroy();
-			// this被o代替
-			ref = o.ref;
-			feature = o.feature;
-			addref();
-		}
-		return *this;
-	}
-};
-
-/************************************************************************
-* @struct Item
-* @brief 类别信息结构体（类别名称, 类别ID）
-************************************************************************/
-struct Item 
-{
-	int id;				// 类别ID(从1开始)
-	char name[64];		// 类别名称
-	Item() { id = 0; memset(name, 0, sizeof(name)); }
-	Item(const char *_name, int _id) { strcpy_s(name, _name); id = max(_id, 1); }
-};
-
-/************************************************************************
-* @class LabelMap
-* @brief 类别标签
-************************************************************************/
-class labelMap
-{
-public:
-	int num;			// 类别个数（至少一个）
-	Item *items;		// 类别信息
-	labelMap() { num = 0; items = 0; }
-	~labelMap() { if(items) delete [] items; }
-
-	// 创建类别标签
-	void Create(int n) { num = max(n, 1); if(0 == items) items = new Item[num]; }
-	// 销毁类别标签
-	void Destroy() { num = 0; if(items) delete [] items; items = 0; }
-	// 插入新的类别
-	void InsertItem(const Item & it) { if(it.id > 0 && it.id <= num) items[it.id - 1] = it; }
-	// 根据ID获取类名
-	const char* getItemName(int id) const { return (id > 0 && id <= num) ? items[id - 1].name : ""; }
-};
 
 /************************************************************************
 * @class pyCaller
@@ -125,7 +39,7 @@ private:
 	}
 
 	// 解析python结果
-	tfOutput ParseResult(PyObject *pRetVal, tfOutput *tf);
+	void ParseResult(PyObject *pRetVal, tfOutput &tf);
 
 public:
 	// 设置python安装目录
@@ -187,10 +101,7 @@ public:
 			t = clock() - t;
 			char szOut[128];
 			sprintf_s(szOut, "PyImport_ImportModule using %d ms.\n", t);
-			OutputDebugStringA(szOut);
-#ifndef _AFX
 			printf(szOut);
-#endif
 			pModule = py;
 		}
 		else
@@ -260,33 +171,12 @@ public:
 
 	/**
 	* @brief 调用python脚本中的指定函数
+	* @param func_name 函数名称
+	* @param arg 函数参数
+	* @param tf 存放numpy array的结构体
 	*/
-	tfOutput CallFunction(const char * func_name, const char *arg, tfOutput *tf = NULL)
+	void CallFunction(const char * func_name, PyObject *arg, tfOutput &tf)
 	{
-		tfOutput out;
-		out = tf ? *tf : out;
-		PyObject *pFunc = pFunMap[func_name];
-		if (pFunc)
-		{
-			const char *utf8 = MByteToUtf8(arg);
-			PyObject* pArg = Py_BuildValue("(s)", utf8);
-			delete [] utf8;
-			if (NULL == pArg)
-				return out;
-			PyObject* pRetVal = PyEval_CallObject(pFunc, pArg);
-			if (NULL == pRetVal)
-				return out;
-			out = ParseResult(pRetVal, tf);
-		}
-		return out;
-	}
-	/**
-	* @brief 调用python脚本中的指定函数
-	*/
-	tfOutput CallFunction(const char * func_name, PyObject *arg, tfOutput *tf = NULL)
-	{
-		tfOutput out;
-		out = tf ? *tf : out;
 #if STATIC_DETECTING
 		static PyObject *pFunc = pFunMap[func_name];
 #else 
@@ -302,12 +192,11 @@ public:
 
  			PyObject* pRetVal = PyEval_CallObject(pFunc, arg);
 			if (pRetVal)
-				out = ParseResult(pRetVal, tf);
+				ParseResult(pRetVal, tf);
 
 			Py_UNBLOCK_THREADS;
 			Py_END_ALLOW_THREADS;
 			if (!nHold)PyGILState_Release(gstate);
 		}
-		return out;
 	}
 };

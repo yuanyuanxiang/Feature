@@ -2,16 +2,14 @@
 
 wchar_t pyCaller::pyHome[] = { 0 };
 
-tfOutput pyCaller::ParseResult(PyObject *pRetVal, tfOutput *tf)
+void pyCaller::ParseResult(PyObject *pRetVal, tfOutput &tf)
 {
-	tfOutput out;
-	out = tf ? *tf : out;
 	PyArrayObject *pMatrix = (PyArrayObject *) pRetVal;
 
-	int x1 = pMatrix->dimensions[0];
-	if (x1 == 512)
-		memcpy(out.feature, pMatrix->data, x1 * sizeof(float));
+	int x1 = tf.nx > 1 ? pMatrix->dimensions[0] : 1,
+		x2 = tf.ny > 1 ? pMatrix->dimensions[1] : 1,
+		x3 = tf.nz > 1 ? pMatrix->dimensions[2] : 1;
+	if (x1 == tf.nx && x2 == tf.ny && x3 == tf.nz)
+		memcpy(tf.feature, pMatrix->data, x1*x2*x3 * sizeof(float));
 	My_DECREF(pMatrix);
-
-	return out;
 }

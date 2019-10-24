@@ -24,18 +24,24 @@
     <ClInclude Include="config.h">
       <Filter>python</Filter>
     </ClInclude>
-    <ClInclude Include="StrTransfer.h">
-      <Filter>python</Filter>
+    <ClInclude Include="Feature.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="FeatureSDK.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pyCaller.cpp">
       <Filter>python</Filter>
     </ClCompile>
-    <ClCompile Include="StrTransfer.cpp">
-      <Filter>python</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Feature.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="FeatureSDK.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

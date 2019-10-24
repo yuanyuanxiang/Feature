@@ -123,14 +123,16 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Feature.cpp" />
+    <ClCompile Include="FeatureSDK.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pyCaller.cpp" />
-    <ClCompile Include="StrTransfer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="config.h" />
+    <ClInclude Include="Feature.h" />
+    <ClInclude Include="FeatureSDK.h" />
     <ClInclude Include="pyCaller.h" />
-    <ClInclude Include="StrTransfer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

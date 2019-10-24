@@ -2,6 +2,7 @@
 // 将python的库目录添加到项目的附加库目录
 // 然后根据实际情况修改本文件。
 
+#pragma once
 
 //////////////////////////////////////////////////////////////////////////
 // OpenCV 配置
@@ -74,3 +75,66 @@ using namespace cv;
 
 // 保存已识别人脸图像需满足的最小尺寸
 #define MIN_FACESIZE 64
+
+#define SAFE_DELETE_ARRAY(p) if(p) { delete [] (p); (p) = NULL; }
+
+#define TRUE 1
+
+#define FALSE 0
+
+/************************************************************************
+* @class tfOutput
+* @brief tensorflow模型输出的参数结构, 存放numpy array
+* @note 由于该结构需要被频繁使用, 故该类通过引用计数ref管理内存, \n
+如有内存泄漏, 请联系本人
+************************************************************************/
+class tfOutput
+{
+public:
+	int nx, ny, nz;			// numpy array的维度信息
+protected:
+	int *ref;				// 引用计数
+	int addref() const { return ++(*ref); }
+	int removeref() const { return --(*ref); }
+	void destroy()			// 销毁
+	{
+		if (0 == removeref())
+		{
+			SAFE_DELETE_ARRAY(ref);
+			SAFE_DELETE_ARRAY(feature);
+		}
+	}
+	void assign(const tfOutput &o) {
+		nx = o.nx; ny = o.ny; nz = o.nz;
+		ref = o.ref;
+		feature = o.feature;
+		addref();
+	}
+public:
+	float *feature;			// 512维的特征向量
+
+	tfOutput(int x, int y = 1, int z = 1)
+	{
+		memset(this, 0, sizeof(tfOutput));
+		ref = new int(1);
+		nx = x; ny = y; nz = z;
+		feature = new float[nx * ny * nz];
+	}
+	~tfOutput()
+	{
+		destroy();
+	}
+	tfOutput(const tfOutput &o)
+	{
+		assign(o);
+	}
+	tfOutput operator = (const tfOutput &o)
+	{
+		if (this != &o)// 防止自己赋值给自己
+		{
+			destroy();// 先清理本对象
+			assign(o);// this被o代替
+		}
+		return *this;
+	}
+};
