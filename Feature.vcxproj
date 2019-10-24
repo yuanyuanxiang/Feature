@@ -86,7 +86,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
     </ClCompile>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)index.py" "$(SolutionDir)x64\$(Configuration)\index.py"</Command>
@@ -112,7 +112,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -123,16 +123,21 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Classify.cpp" />
     <ClCompile Include="Feature.cpp" />
     <ClCompile Include="FeatureSDK.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pyCaller.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="chinese_whispers.h" />
+    <ClInclude Include="Classify.h" />
     <ClInclude Include="config.h" />
     <ClInclude Include="Feature.h" />
     <ClInclude Include="FeatureSDK.h" />
+    <ClInclude Include="ordered_sample_pair.h" />
     <ClInclude Include="pyCaller.h" />
+    <ClInclude Include="sample_pair.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -4,9 +4,14 @@
 
 #pragma once
 
+// 检查内存泄漏，如不需要，需注释这行
+//#include "vld.h"
+
 //////////////////////////////////////////////////////////////////////////
 // OpenCV 配置
 #define CV_VER "320"
+
+#define USING_STL 1
 
 #if _MSC_VER < 1900 // Visual Studio 2015以下版本可使用下述宏定义快速链接库
 
@@ -136,5 +141,14 @@ public:
 			assign(o);// this被o代替
 		}
 		return *this;
+	}
+	friend double distance(const tfOutput &v1, const tfOutput &v2) {
+		float sum = 0;
+		for (int i=0; i<v1.nx; ++i)
+		{
+			float t = v1.feature[i] - v2.feature[i];
+			sum += t*t;
+		}
+		return sqrt(sum);
 	}
 };
