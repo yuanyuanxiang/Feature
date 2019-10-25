@@ -31,7 +31,7 @@ Results getFeature(const std::string &folder_path)
 				else
 				{
 					cv::Mat m = imread(child.c_str());
-					if (m.size)
+					if (m.rows > 32 && m.cols > 32)
 					{
 						tfOutput f = features(m, 512, 1, 1);
 						ret.push_back(Result(child, f));
@@ -72,6 +72,8 @@ void SaveFile(const Results & m, const std::string &name, const std::string &fea
 void SaveFile(const Results & m, const std::string &file)
 {
 	assert(m.size());
+	if (m.size() == 0)
+		return;
 	FILE *fid = fopen(file.c_str(), "wb");
 	if (fid)
 	{
@@ -197,8 +199,10 @@ void save(const std::string &path, int class_id)
 // CW∑÷¿‡
 void Classify(const Results & m, double threshold)
 {
-	DeleteFolder("./classify");
 	int num = m.size();
+	if (num == 0)
+		return;
+	DeleteFolder("./classify");
 	ARRAY<dlib::sample_pair> edges(USING_STL ? 0 : num * num / 16);
 	unsigned long x = 0;
 	for (Results::const_iterator i = m.begin(); i != m.end(); ++i, ++x)
