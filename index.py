@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-import os
+import sys
 import h5py
 import numpy as np
-import argparse
-
 from numpy import linalg as LA
 
 from keras.applications.vgg16 import VGG16
@@ -40,23 +38,8 @@ class VGGNet:
         image_np = np.expand_dims(image_np, axis=0)
         image_np = preprocess_input(image_np)
         feat = self.model.predict(image_np)
-        norm_feat = feat[0]/LA.norm(feat[0])
+        norm_feat = feat[0]/LA.norm(feat[0]) # normlized
         return norm_feat
-
-    def featureAll(self, img_dir):
-        img_list = get_imlist(img_dir)
-        feats = []
-        names = []
-        for i, img_path in enumerate(img_list):
-            norm_feat = self.features(img_path)
-            img_name = os.path.split(img_path)[1]
-            feats.append(norm_feat)
-            names.append(img_name.encode())
-            print("extracting feature from image No. %d / %d" %
-                  ((i+1), len(img_list)))
-
-        feats = np.array(feats)
-        return names, feats
 
 
 # VGG16
@@ -74,40 +57,13 @@ def Feature(image_src):
     return result
 
 
-# init VGG16
+# active VGG16
 model.features("image.JPG")
 
 
-def get_imlist(path):
-    '''
-    Returns a list of filenames for all jpg images in a directory. 
-    '''
-    return [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.jpg')]
-
-
-'''
- Extract features and index the images
- # 对database文件夹内图片进行特征提取，建立索引文件featureCNN.h5
- # python index.py -database database -index featureCNN.h5
-'''
+# main
 if __name__ == "__main__":
-
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-database", required=False,
-                    help="Path to database which contains images to be indexed",
-                    default="D:\\照片\\2019【趣探索】中秋节")
-    ap.add_argument("-index", required=False,
-                    help="Name of index file", default="featureCNN.h5")
-    args = vars(ap.parse_args())
-    # directory of images
-    db = args["database"]
-    # directory for storing extracted features
-    output = args["index"]
-
-    names, feats = model.featureAll(db)
-
-    h5f = h5py.File(output, 'w')
-    h5f.create_dataset('dataset_1', data=feats)
-    h5f.create_dataset('dataset_2', data=names)
-    h5f.close()
-    print("Finish")
+    img = "image.JPG"
+    if len(sys.argv) > 1:
+        img = sys.argv[1]
+    print("feature of ", img, ":\n", model.features(img))
