@@ -28,3 +28,9 @@ void Classify(const Results &m, double threshold);
 
 // 从文件加载结果
 const Results LoadFile(const std::string &file);
+
+std::string getFileName(const std::string &path);
+
+std::string getFileDir(const std::string &path);
+
+bool DeleteFolder(const std::string &folder_path);

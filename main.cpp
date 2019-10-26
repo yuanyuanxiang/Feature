@@ -28,7 +28,7 @@ std::string getDirName(const char *dir) {
 int main(int argc, const char *argv[])
 {
 	const char *path = argc > 1 ? argv[1] : "./src";
-	const float thresh = argc > 2 ? atof(argv[2]) : 0.7f;
+	const float thresh = argc > 2 ? atof(argv[2]) : 0.6f;
 	const char *python = argc > 3 ? argv[3] : 
 		"D:\\ProgramData\\Anaconda3\\envs\\tfcpu";
 	printf("Processing \"%s\".\n", path);
@@ -45,7 +45,14 @@ int main(int argc, const char *argv[])
 	}
 	
 	// 阈值越小，分类数越多，阈值越大，分类数越少.
-	Classify(m, thresh);
+	if (m.size())
+	{
+		std::string classify = "./classify/";
+		std::string targetDir = getFileName(path);
+		DeleteFolder(classify + targetDir);
+		Classify(m, thresh);
+	}
+	
 	system("PAUSE");
 	return 0;
 }

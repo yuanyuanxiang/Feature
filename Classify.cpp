@@ -177,21 +177,33 @@ bool DeleteFolder(const std::string &folder_path)
 }
 
 // 从path获取文件名称
-const char* getFileName(const std::string &path) {
+std::string getFileName(const std::string &path) {
 	const char *h = path.c_str(), *p = h + path.length();
-	while (p != h && *p != '\\') --p;
+	while (p != h && *p != '\\' && *p != '/') --p;
+	return p + 1;
+}
+
+// 从path获取文件目录
+std::string getFileDir(const std::string &path) {
+	char buf[_MAX_PATH], *p = buf + path.length();;
+	strcpy_s(buf, path.c_str());
+	while (p != buf && *p != '\\' && *p != '/') --p; *p = 0;
+	while (p != buf && *p != '\\' && *p != '/') --p;
 	return p + 1;
 }
 
 // 将path所代表文件保存到指定的类别目录
+// 位于classify目录的子目录，文件取名以类别开头
 void save(const std::string &path, int class_id)
 {
 	char dir[_MAX_PATH], src[_MAX_PATH], dst[_MAX_PATH];
-	sprintf_s(dir, "./classify/%d", class_id);
+	std::string targetDir = getFileDir(path);
+	std::string targetName = getFileName(path);
+	sprintf_s(dir, "./classify/%s", targetDir.c_str());
 	_mkdir("./classify");
 	_mkdir(dir);
 	sprintf_s(src, "%s", path.c_str());
-	sprintf_s(dst, "%s/%s", dir, getFileName(path));
+	sprintf_s(dst, "%s/%03d_%s", dir, class_id, targetName.c_str());
 	if (FALSE == CopyFile(src, dst, TRUE))
 		printf("CopyFile %s failed.\n", path.c_str());
 }
@@ -202,7 +214,6 @@ void Classify(const Results & m, double threshold)
 	int num = m.size();
 	if (num == 0)
 		return;
-	DeleteFolder("./classify");
 	ARRAY<dlib::sample_pair> edges(USING_STL ? 0 : num * num / 16);
 	unsigned long x = 0;
 	for (Results::const_iterator i = m.begin(); i != m.end(); ++i, ++x)
@@ -217,7 +228,7 @@ void Classify(const Results & m, double threshold)
 	ARRAY<unsigned long> labels;
 	const int num_clusters = chinese_whispers(edges, labels);
 	int *count = new int[num_clusters]();
-	std::cout << "element num: " << num << ", number of clusters: " << num_clusters << "\n";
+	std::cout << "element num: " << num << ", number of clusters: " << num_clusters << ".\n";
 	for (int cluster_id = 0; cluster_id < num_clusters; ++cluster_id)
 	{
 		std::cout << "cluster " << cluster_id << ": ";
