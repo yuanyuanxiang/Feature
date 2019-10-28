@@ -52,7 +52,7 @@ int main(int argc, const char *argv[])
 	{
 		std::string classify = "./classify/";
 		std::string targetDir = getFileName(path);
-		DeleteFolder(classify + targetDir);
+		removeDir(classify + targetDir);
 		Classify(m, thresh);
 	}
 #ifdef _DEBUG

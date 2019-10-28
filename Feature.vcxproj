@@ -123,6 +123,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\public\fileop.cpp" />
     <ClCompile Include="Classify.cpp" />
     <ClCompile Include="Feature.cpp" />
     <ClCompile Include="FeatureSDK.cpp" />
@@ -130,6 +131,7 @@
     <ClCompile Include="pyCaller.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\public\fileop.h" />
     <ClInclude Include="chinese_whispers.h" />
     <ClInclude Include="Classify.h" />
     <ClInclude Include="config.h" />

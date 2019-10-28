@@ -12,38 +12,17 @@
 Results getFeature(const std::string &folder_path)
 {
 	clock_t t = clock();
-	//文件句柄
-	intptr_t hFile = 0;
-	//文件信息  
-	struct _finddata_t fileinfo;
-	std::string p;
 	Results ret;
-	try
+	FileList ls = getFilesByDir(folder_path);
+	for (FileList::const_iterator i= ls.begin(); i!= ls.end(); ++i)
 	{
-		if ((hFile = _findfirst(p.assign(folder_path).append("\\*.*").c_str(), &fileinfo)) != -1)
+		cv::Mat m = imread(*i);
+		if (m.rows > 32 && m.cols > 32)
 		{
-			do {
-				if (0 == strcmp(fileinfo.name, ".") || 0 == strcmp(fileinfo.name, ".."))
-					continue;
-				std::string child = folder_path + "\\" + fileinfo.name;
-				if (FILE_ATTRIBUTE_DIRECTORY & fileinfo.attrib) //子目录
-				{
-					continue;
-				}
-				else
-				{
-					cv::Mat m = imread(child.c_str());
-					if (m.rows > 32 && m.cols > 32)
-					{
-						tfOutput f = features(m, 512, 1, 1);
-						ret.push_back(Result(child, f));
-					}
-				}
-			} while (_findnext(hFile, &fileinfo) == 0);
-			_findclose(hFile);
+			tfOutput f = features(m, 512, 1, 1);
+			ret.push_back(Result(*i, f));
 		}
 	}
-	catch (std::exception e) { if (hFile) _findclose(hFile); }
 	t = clock() - t;
 	if (!ret.empty())
 		printf("Total %d, Avg using time %fms.\n", (int)ret.size(), float(t)/ret.size());
@@ -137,70 +116,12 @@ const Results LoadFile(const std::string &file) {
 	return m;
 }
 
-// 递归删除目录
-bool DeleteFolder(const std::string &folder_path)
-{
-	bool ret = true;
-	//文件句柄
-	intptr_t hFile = 0;
-	//文件信息  
-	struct _finddata_t fileinfo;
-	std::string p;
-	try
-	{
-		if ((hFile = _findfirst(p.assign(folder_path).append("\\*.*").c_str(), &fileinfo)) != -1)
-		{
-			do {
-				if (0 == strcmp(fileinfo.name, ".") || 0 == strcmp(fileinfo.name, ".."))
-					continue;
-				std::string child = folder_path + "\\" + fileinfo.name;
-				if (FILE_ATTRIBUTE_DIRECTORY & fileinfo.attrib) //子目录
-				{
-					if (DeleteFolder(child)) {
-						BOOL b = RemoveDirectory(child.c_str());
-						if (FALSE == b) ret = false;
-						printf("删除\"%s\"%s.\n", child.c_str(), b ? "成功" : "失败");
-					}
-					else ret = false;
-				}
-				else // 非空目录
-				{
-					if (!DeleteFileA(child.c_str())) {
-						ret = false;
-						printf("删除\"%s\"失败.\n", child.c_str());
-					}
-				}
-			} while (_findnext(hFile, &fileinfo) == 0);
-			_findclose(hFile);
-		}
-	}
-	catch (std::exception e) { if (hFile) _findclose(hFile); }
-
-	return ret;
-}
-
-// 从path获取文件名称
-std::string getFileName(const std::string &path) {
-	const char *h = path.c_str(), *p = h + path.length();
-	while (p != h && *p != '\\' && *p != '/') --p;
-	return p + 1;
-}
-
-// 从path获取文件目录
-std::string getFileDir(const std::string &path) {
-	char buf[_MAX_PATH], *p = buf + path.length();;
-	strcpy_s(buf, path.c_str());
-	while (p != buf && *p != '\\' && *p != '/') --p; *p = 0;
-	while (p != buf && *p != '\\' && *p != '/') --p;
-	return p + 1;
-}
-
 // 将path所代表文件保存到指定的类别目录
 // 位于classify目录的子目录，文件取名以类别开头
 void save_mode1(const std::string &path, int class_id) {
 	static bool made = false;
 	char dir[_MAX_PATH], src[_MAX_PATH], dst[_MAX_PATH];
-	std::string targetDir = getFileDir(path);
+	std::string targetDir = getFileDirName(path);
 	std::string targetName = getFileName(path);
 	sprintf_s(dir, "./classify/%s", targetDir.c_str());
 	if (!made)
@@ -221,7 +142,7 @@ void save_mode2(const std::string &path, int class_id) {
 	static bool made = false;
 	static int i = 0;
 	char sub_dir[_MAX_PATH], src[_MAX_PATH], dst[_MAX_PATH];
-	std::string targetDir = getFileDir(path);
+	std::string targetDir = getFileDirName(path);
 	std::string targetName = getFileName(path);
 	std::string dir = "./classify/" + targetDir;
 	sprintf_s(sub_dir, "%s/%03d", dir.c_str(), class_id);

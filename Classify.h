@@ -3,6 +3,10 @@
 #include <string>
 #include "config.h"
 
+// @see https://github.com/yuanyuanxiang/public
+// 请将此项目克隆
+#include "../public/fileop.h"
+
 // 图片及其特征
 struct Result
 {
@@ -28,9 +32,3 @@ void Classify(const Results &m, double threshold);
 
 // 从文件加载结果
 const Results LoadFile(const std::string &file);
-
-std::string getFileName(const std::string &path);
-
-std::string getFileDir(const std::string &path);
-
-bool DeleteFolder(const std::string &folder_path);
