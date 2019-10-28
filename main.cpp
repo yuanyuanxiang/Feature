@@ -38,8 +38,11 @@ int main(int argc, const char *argv[])
 	Results m = LoadFile(bin);
 	if (m.size() == 0)
 	{
-		if (!Init(python, "index", "Feature"))
+		if (!Init(python, "index", "Feature")) {
+			system("PAUSE");
 			return -1;
+		}
+		printf("Getting features - powered by VGG-16.\n");
 		m = getFeature(path);
 		SaveFile(m, bin);
 	}
@@ -52,8 +55,9 @@ int main(int argc, const char *argv[])
 		DeleteFolder(classify + targetDir);
 		Classify(m, thresh);
 	}
-	
+#ifdef _DEBUG
 	system("PAUSE");
+#endif
 	return 0;
 }
 

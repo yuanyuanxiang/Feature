@@ -137,7 +137,11 @@
     <ClInclude Include="FeatureSDK.h" />
     <ClInclude Include="ordered_sample_pair.h" />
     <ClInclude Include="pyCaller.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="sample_pair.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Feature.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

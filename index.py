@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import sys
 import h5py
 import numpy as np
@@ -28,10 +29,13 @@ class VGGNet:
     '''
 
     def features(self, img_path):
-        img = image.load_img(img_path, target_size=(self.input_shape[0], self.input_shape[1]),
+        if os.path.exists(img_path):
+            img = image.load_img(img_path, target_size=(self.input_shape[0], self.input_shape[1]),
                              interpolation='bilinear')
-        img = image.img_to_array(img)
-        return self.featureSrc(img)
+            img = image.img_to_array(img)
+            return self.featureSrc(img)
+        else:
+            return 0
 
     # numpy array
     def featureSrc(self, image_np):

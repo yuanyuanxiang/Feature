@@ -6,6 +6,8 @@
 #include "chinese_whispers.h"
 #include <direct.h>
 
+#define SAVE_MODE 2
+
 // 对给定目录内的图片进行特征提取
 Results getFeature(const std::string &folder_path)
 {
@@ -43,7 +45,8 @@ Results getFeature(const std::string &folder_path)
 	}
 	catch (std::exception e) { if (hFile) _findclose(hFile); }
 	t = clock() - t;
-	printf("Total %d, Avg using time %fms.\n", (int)ret.size(), float(t)/ret.size());
+	if (!ret.empty())
+		printf("Total %d, Avg using time %fms.\n", (int)ret.size(), float(t)/ret.size());
 	return ret;
 }
 
@@ -71,7 +74,6 @@ void SaveFile(const Results & m, const std::string &name, const std::string &fea
 // 将结果保存为二进制文件
 void SaveFile(const Results & m, const std::string &file)
 {
-	assert(m.size());
 	if (m.size() == 0)
 		return;
 	FILE *fid = fopen(file.c_str(), "wb");
@@ -107,6 +109,7 @@ const Results LoadFile(const std::string &file) {
 	FILE *fid = fopen(file.c_str(), "rb");
 	if (fid)
 	{
+		printf("Loading features - powered by VGG-16.\n");
 		// 文件头
 		char HEADER[8] = { 0 };
 		fread(HEADER, 1, 8, fid);
@@ -194,18 +197,55 @@ std::string getFileDir(const std::string &path) {
 
 // 将path所代表文件保存到指定的类别目录
 // 位于classify目录的子目录，文件取名以类别开头
-void save(const std::string &path, int class_id)
-{
+void save_mode1(const std::string &path, int class_id) {
+	static bool made = false;
 	char dir[_MAX_PATH], src[_MAX_PATH], dst[_MAX_PATH];
 	std::string targetDir = getFileDir(path);
 	std::string targetName = getFileName(path);
 	sprintf_s(dir, "./classify/%s", targetDir.c_str());
-	_mkdir("./classify");
-	_mkdir(dir);
+	if (!made)
+	{
+		_mkdir("./classify");
+		_mkdir(dir);
+		made = true;
+	}
 	sprintf_s(src, "%s", path.c_str());
 	sprintf_s(dst, "%s/%03d_%s", dir, class_id, targetName.c_str());
 	if (FALSE == CopyFile(src, dst, TRUE))
 		printf("CopyFile %s failed.\n", path.c_str());
+}
+
+// 将path所代表文件保存到指定的类别目录
+// 位于classify目录的子目录，子目录为类别
+void save_mode2(const std::string &path, int class_id) {
+	static bool made = false;
+	static int i = 0;
+	char sub_dir[_MAX_PATH], src[_MAX_PATH], dst[_MAX_PATH];
+	std::string targetDir = getFileDir(path);
+	std::string targetName = getFileName(path);
+	std::string dir = "./classify/" + targetDir;
+	sprintf_s(sub_dir, "%s/%03d", dir.c_str(), class_id);
+	if (!made)
+	{
+		_mkdir("./classify");
+		_mkdir(dir.c_str());
+		_mkdir(sub_dir);
+	}
+	sprintf_s(src, "%s", path.c_str());
+	sprintf_s(dst, "%s/%04d_%s", sub_dir, ++i, targetName.c_str());
+	if (FALSE == CopyFile(src, dst, TRUE))
+		printf("CopyFile %s failed.\n", path.c_str());
+}
+
+void save(const std::string &path, int class_id, int mode=1)
+{
+	switch (mode)
+	{
+	case 1: return save_mode1(path, class_id);
+	case 2: return save_mode2(path, class_id);
+	default:
+		assert(0);
+	}
 }
 
 // CW分类
@@ -237,7 +277,7 @@ void Classify(const Results & m, double threshold)
 			if (cluster_id == labels[j])
 			{
 				++count[cluster_id];
-				save(m[j].name, cluster_id);
+				save(m[j].name, cluster_id, SAVE_MODE);
 			}
 		}
 		std::cout << count[cluster_id] << "个.\n";

@@ -97,7 +97,7 @@ public:
 			if (bMultiThread && PyEval_ThreadsInitialized())
 				PyEval_SaveThread();
 			if (NULL == py)
-				OUTPUT("PyImport_ImportModule failed.\n");
+				OUTPUT("PyImport_ImportModule[%s] failed.\n", module_name);
 			t = clock() - t;
 			char szOut[128];
 			sprintf_s(szOut, "PyImport_ImportModule using %d ms.\n", t);
